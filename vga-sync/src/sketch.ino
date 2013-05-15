@@ -26,11 +26,9 @@ volatile unsigned int linecount;
 void setup()
 {
   //Serial.begin(9600);         // set up Serial library at 9600 bps
-  DDRB |= B00000111;
   DDRD |= B11100000;            // it sets pins 7, 6 and 5 as output without changing the value of pins 0 & 1, which are RX & TX
   //       76543210 <- pin translation
 
-  PORTB |= B00000111;
   PORTD |= B11000000;   // sets pins 7 (hSync) and 6 (vSync) HIGH
   //        76543210;
   

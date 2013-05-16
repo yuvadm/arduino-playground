@@ -25,19 +25,41 @@ LPD8806 strip = LPD8806(nLEDs, dataPin, clockPin);
 // clock = pin B1.  For Leonardo, this can ONLY be done on the ICSP pins.
 //LPD8806 strip = LPD8806(nLEDs);
 
-uint32_t SCHEME[] = {
+uint32_t SCHEMES[5][4] = {
+{
   strip.Color(117, 0, 27),
   strip.Color(127, 43, 0),
   strip.Color(0, 85, 57),
   strip.Color(41, 111, 0)
-};
-
-uint32_t SCHEME2[] = {
+},
+{
   strip.Color(99,0,62),
   strip.Color(124,0,9),
   strip.Color(53,5,85),
   strip.Color(84,120,0)
-};
+},
+{
+  strip.Color(127,95,0),
+  strip.Color(41,7,86),
+  strip.Color(41,7,86),
+  strip.Color(5,48,82)
+},
+{
+  strip.Color(0,93,31),
+  strip.Color(3,60,79),
+  strip.Color(67,117,0),
+  strip.Color(127,20,0)
+},
+{
+  strip.Color(79,119,0),
+  strip.Color(0,102,0),
+  strip.Color(127,0,0),
+  strip.Color(102,0,58)
+}};
+
+int mode;
+unsigned long last;
+uint32_t* scheme;
 
 void setup() {
   // Start up the LED strip
@@ -45,14 +67,27 @@ void setup() {
 
   // Update the strip, to start they are all 'off'
   strip.show();
+
+  randomSeed(analogRead(0));
+  mode = 1;
+  scheme = SCHEMES[random(5)];
+  last = 0;
 }
 
 void loop() {
-  colorChase();
+  unsigned long t = millis();
+  if (t - last > 25000) {
+    mode = (mode + 1) % 2;
+    scheme = SCHEMES[random(5)];
+    last = t;
+  }
+  if (mode == 0)
+    chase(scheme);
+  else if (mode == 1)
+    sparkle(scheme);
 }
 
-// Chase one dot down the full strip.  Good for testing purposes.
-void colorChase() {
+void sparkle(uint32_t* scheme) {
   int i;
   uint32_t c;
   uint8_t wait;
@@ -62,11 +97,38 @@ void colorChase() {
 
   // Then display one pixel at a time:
   for(i=0; i<strip.numPixels(); i++) {
-    c = SCHEME2[random(4)];
+    c = scheme[random(4)];
     strip.setPixelColor(i, c); // Set new pixel 'on'
     // strip.show();              // Refresh LED states
     // strip.setPixelColor(i, 0); // Erase pixel, but don't refresh!
     // delay(random(30));
+  }
+
+  strip.show(); // Refresh to turn off last pixel
+  delay(50);
+}
+
+void chase(uint32_t* scheme) {
+  int i;
+  uint32_t c;
+  uint8_t wait;
+
+  // Start by turning all pixels off:
+  for(i=0; i<strip.numPixels(); i++) strip.setPixelColor(i, 0);
+
+  // Then display one pixel at a time:
+  for(i=0; i<strip.numPixels(); i++) {
+    c = scheme[random(4)];
+    strip.setPixelColor(i, c); // Set new pixel 'on'
+    strip.setPixelColor((i * 2) % nLEDs, c); // Set new pixel 'on'
+    strip.setPixelColor((i * 3) % nLEDs, c); // Set new pixel 'on'
+    strip.setPixelColor((i * 5) % nLEDs, c); // Set new pixel 'on'
+    strip.show();              // Refresh LED states
+    strip.setPixelColor(i, 0); // Erase pixel, but don't refresh!
+    strip.setPixelColor((i * 2) % nLEDs, 0); // Set new pixel 'on'
+    strip.setPixelColor((i * 3) % nLEDs, c); // Set new pixel 'on'
+    strip.setPixelColor((i * 5) % nLEDs, c); // Set new pixel 'on'
+    delay(random(30));
   }
 
   strip.show(); // Refresh to turn off last pixel

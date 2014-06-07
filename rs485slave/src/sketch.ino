@@ -12,10 +12,15 @@
 
 #define SerialDebug      0
 
+// Manually flashed from 0 to 7
+#define SlaveId          0
+
 SoftwareSerial RS485Serial(SSerialRX, SSerialTX);
 
-int byteReceived;
-int byteSend;
+int packet;
+int tree;
+int channel;
+int mode;
 
 void setup()
 {
@@ -28,26 +33,40 @@ void setup()
     pinMode(i, OUTPUT);
   }
   pinMode(SSerialTxControl, OUTPUT);
-
   digitalWrite(SSerialTxControl, RS485Receive);
-  
   RS485Serial.begin(RS485Baud);
-}
-
-void togglePin(int pin) {
-  if (digitalRead(pin) == HIGH) {
-    digitalWrite(pin, LOW);
-  } else {
-    digitalWrite(pin, HIGH);
-  }
 }
 
 void loop()
 {
   if (RS485Serial.available()) 
   {
-    byteSend = RS485Serial.read();
-    togglePin(byteSend - 97 - 8 + 4);
-    Serial.println(byteSend);
+    packet = RS485Serial.read();
+    /*
+      Packet structure is 1 byte == 8 bits
+      | Tree ID (3 bits) | Channel ID (3 bits) | Mode (2 bits) |
+
+      Tree ID is 0-7
+      Channe ID is 0-7
+      Mode is one of:
+        0 - Off
+        1 - On
+        2 - Unused (assume on)
+        3 - Unused (assume on)
+    */
+    tree = (packet & 224) >> 5;
+    if (tree == SlaveId) {
+      channel = (packet & 28) >> 2;
+      mode = packet & 3;
+      if (mode) {
+        digitalWrite(channel, HIGH);
+      } else {
+        digitalWrite(channel, LOW);
+      }
+    }
+
+    if (SerialDebug) {
+      Serial.println(packet);
+    }
   }
 }

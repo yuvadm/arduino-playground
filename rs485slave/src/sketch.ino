@@ -8,7 +8,7 @@
 
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
-#define RS485Baud        115200
+#define RS485Baud        4800
 
 #define SerialDebug      0
 
@@ -57,6 +57,7 @@ void loop()
     tree = (packet & 224) >> 5;
     if (tree == SlaveId) {
       channel = (packet & 28) >> 2;
+      channel = channel + RelayStartPin;
       mode = packet & 3;
       if (mode) {
         digitalWrite(channel, HIGH);

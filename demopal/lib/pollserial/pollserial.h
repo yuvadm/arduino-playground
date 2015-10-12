@@ -24,6 +24,19 @@
 #ifndef PSERIAL_H
 #define PSERIAL_H
 
+#if defined(__AVR_ATmega32U4__)
+// Serial 0 on leonardo is used for USB, thus we need to use Serial 1.
+#define UDR0 UDR1
+#define UCSR0A UCSR1A
+#define RXC0 RXC1
+#define U2X0 U2X1
+#define UBRR0 UBRR1
+#define UCSR0B UCSR1B
+#define TXEN0 TXEN1
+#define RXEN0 RXEN1
+#define UDRE0 UDRE1
+#endif
+
 #include <inttypes.h>
 #include "Print.h"
 
